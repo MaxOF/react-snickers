@@ -1,9 +1,11 @@
 import React from 'react';
 import { Route } from 'react-router-dom';
 import axios from 'axios';
+
 import Header from './components/Header';
 import Drawer from './components/Drawer';
 import AppContext from './context';
+
 import Home from './pages/Home';
 import Favorites from './pages/Favorites';
 import Orders from './pages/Orders';
@@ -41,12 +43,23 @@ function App() {
 
   const onAddToCart = async (obj) => {
     try {
-      if (cartItems.find((item) => Number(item.id) === Number(obj.id))) {
-        setCartItems((prev) => prev.filter((item) => Number(item.id) !== Number(obj.id)));
-        await axios.delete(`https://615f36b4f7254d0017068056.mockapi.io/cart/${obj.id}`);
+      const findItem = cartItems.find((item) => Number(item.parentId) === Number(obj.id));
+      if (findItem) {
+        await axios.delete(`https://615f36b4f7254d0017068056.mockapi.io/cart/${findItem.id}`);
+        setCartItems((prev) => prev.filter((item) => Number(item.parentId) !== Number(obj.id)));
       } else {
         setCartItems((prev) => [...prev, obj]);
-        await axios.post('https://615f36b4f7254d0017068056.mockapi.io/cart', obj);
+        const {data} = await axios.post('https://615f36b4f7254d0017068056.mockapi.io/cart', obj);
+        setCartItems((prev) => prev.map((item) => {
+            if(item.parentId === data.parentId){
+              return { 
+                ...item,
+                id: data.id
+              };
+            }
+            return item;
+        } ));
+        
       }
     } catch (error) {
       alert('Не удалось добавить в корзину');
@@ -57,7 +70,7 @@ function App() {
   const onRemoveItem = (id) => {
     try {
       axios.delete(`https://615f36b4f7254d0017068056.mockapi.io/cart/${id}`);
-      setCartItems((prev) => prev.filter(item => item.id !== id));
+      setCartItems((prev) => prev.filter((item) => Number(item.id) !== Number(id)));
     } catch (error) {
       alert('Ошибка при добавлении из корзины');
       console.error(error);
@@ -84,7 +97,7 @@ function App() {
   }
 
   const isItemAdded = (id) => {
-    return cartItems.some((obj) => Number(obj.id) === Number(id))
+    return cartItems.some((obj) => Number(obj.parentId) === Number(id))
   }
 
   return (

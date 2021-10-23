@@ -28,7 +28,7 @@ const onClickOrder = async () => {
 
         for (let i = 0; i < cartItems.length; i++) {
             const item = cartItems[i];
-            await axios.delete('https://615f36b4f7254d0017068056.mockapi.io/cart' + item.id);
+            await axios.delete('https://615f36b4f7254d0017068056.mockapi.io/cart/' + item.id);
             await delay(1000);
         }
         
